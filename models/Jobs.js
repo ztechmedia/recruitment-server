@@ -25,6 +25,14 @@ const JobsSchema = new mongoose.Schema(
       type: String,
       required: [true, "Pleas add some description for this job"],
     },
+    status: {
+      type: String,
+      default: "Off",
+    },
+    session: {
+      type: Number,
+      default: 0,
+    },
     users: [
       {
         _id: {

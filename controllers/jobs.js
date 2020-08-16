@@ -1,6 +1,8 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/asyncHandler");
 const Jobs = require("../models/Jobs");
+const User = require("../models/User");
+const Hires = require("../models/Hires");
 const { updateToReqBody } = require("../utils/utility");
 
 //@desc     get jobs
@@ -14,7 +16,7 @@ exports.getJobs = asyncHandler(async (req, res, next) => {
 //@route    GET /api/v1/jobs/total-jobs
 //@access   private
 exports.getTotalJobs = asyncHandler(async (req, res, next) => {
-  const total = await Jobs.countDocuments();
+  const total = await Jobs.find({ status: "Active" }).countDocuments();
   res.status(200).json({ success: true, data: total });
 });
 
@@ -88,6 +90,101 @@ exports.applyJob = asyncHandler(async (req, res, next) => {
 
   const job = await Jobs.findById(jobId);
   job.users.unshift(data);
+  job.save();
+
+  res.status(200).json({ success: true, data: job });
+});
+
+//@desc     job status
+//@route    POST /api/v1/jobs/status
+//@access   private
+exports.jobStatus = asyncHandler(async (req, res, next) => {
+  const job = await Jobs.findById(req.body.jobId).populate({
+    path: "users._id",
+    select: "name address educations experiences social",
+  });
+
+  if (!job) return new ErrorResponse("Job not found", 404);
+
+  const user = await User.findById(req.body.userId);
+  if (!user) return new ErrorResponse("User not found", 404);
+
+  const userIndex = job.users
+    .map((user) => user._id._id)
+    .indexOf(req.body.userId);
+  job.users[userIndex].status = req.body.status;
+  job.save();
+
+  res.status(200).json({ success: true, data: job });
+});
+
+//@desc     job activate
+//@route    POST /api/v1/jobs/activate
+//@access   private
+exports.jobActivate = asyncHandler(async (req, res, next) => {
+  const job = await Jobs.findById(req.body.jobId).populate({
+    path: "users._id",
+    select: "name educations experiences",
+  });
+
+  job.status = req.body.status;
+  if (req.body.status === "Active") {
+    job.session = job.session + 1;
+  } else {
+    totalRejected = job.users
+      ? job.users.find((user) => user.status === "Filtered")
+      : null;
+
+    totalAccepted = job.users
+      ? job.users.find((user) => user.status === "Accepted")
+      : null;
+
+    const applicants = [];
+
+    job.users
+      ? job.users.map((user) => {
+          const educations = [];
+          const experiences = [];
+
+          if (user._id.educations.length > 0) {
+            user._id.educations.map((edu) => {
+              const eduDetail = `${edu.degree} - ${edu.school}`;
+              educations.unshift(eduDetail);
+            });
+          }
+
+          if (user._id.experiences.length > 0) {
+            user._id.experiences.map((exp) => {
+              const expDetail = `${exp.title} - ${exp.company} @${exp.location}`;
+              experiences.unshift(expDetail);
+            });
+          }
+
+          const userDdata = {
+            user: {
+              name: user._id.name,
+              educations: educations,
+              experiences: experiences,
+            },
+            status: user.status,
+          };
+
+          applicants.unshift(userDdata);
+        })
+      : null;
+
+    const data = {
+      jobName: job.name,
+      category: "...",
+      totalApplicants: job.users ? job.users.length : 0,
+      acceptedApplicants: totalAccepted ? totalAccepted.length : 0,
+      rejectedApplicants: totalRejected ? totalRejected.length : 0,
+      applicants: applicants,
+    };
+
+    await Hires.create(data);
+  }
+
   job.save();
 
   res.status(200).json({ success: true, data: job });
