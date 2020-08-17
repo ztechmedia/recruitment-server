@@ -98,10 +98,15 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   if (!user) return next(new ErrorResponse("User not found", 404));
 
   user = updateToReqBody(user, req.body);
-  user.save();
-  res.status(200).json({
-    success: true,
-    data: user,
+  user.save(function (err) {
+    if (err) {
+      return next(err);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
   });
 });
 

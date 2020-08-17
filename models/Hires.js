@@ -5,6 +5,9 @@ const HiresSchema = new mongoose.Schema(
     jobName: {
       type: String,
     },
+    session: {
+      type: String,
+    },
     category: {
       type: String,
     },
@@ -17,9 +20,22 @@ const HiresSchema = new mongoose.Schema(
     rejectedApplicants: {
       type: Number,
     },
+    minDegree: {
+      type: String,
+    },
+    minSallary: {
+      type: Number,
+    },
+    maxSallary: {
+      type: Number,
+    },
     applicants: [
       {
         user: {
+          _id: {
+            type: mongoose.Schema.ObjectId,
+            ref: "User",
+          },
           name: {
             type: String,
           },

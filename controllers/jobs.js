@@ -28,7 +28,6 @@ exports.getJob = asyncHandler(async (req, res, next) => {
     path: "users._id",
     select: "name address educations experiences social",
   });
-
   if (!job) return next(new ErrorResponse("Job not found", 404));
 
   res.status(200).json({ success: true, data: job });
@@ -122,22 +121,28 @@ exports.jobStatus = asyncHandler(async (req, res, next) => {
 //@route    POST /api/v1/jobs/activate
 //@access   private
 exports.jobActivate = asyncHandler(async (req, res, next) => {
-  const job = await Jobs.findById(req.body.jobId).populate({
-    path: "users._id",
-    select: "name educations experiences",
-  });
+  const job = await Jobs.findById(req.body.jobId)
+    .populate({
+      path: "users._id",
+      select: "name educations experiences",
+    })
+    .populate({ path: "categories", select: "name" });
 
   job.status = req.body.status;
   if (req.body.status === "Active") {
     job.session = job.session + 1;
   } else {
-    totalRejected = job.users
-      ? job.users.find((user) => user.status === "Filtered")
-      : null;
+    let totalRejected = 0;
+    let totalAccepted = 0;
 
-    totalAccepted = job.users
-      ? job.users.find((user) => user.status === "Accepted")
-      : null;
+    job.users.map((user) => {
+      if (user.status === "Filtered") {
+        totalRejected++;
+      } else if (user.status === "Accepted") {
+        totalAccepted++;
+      }
+      return user;
+    });
 
     const applicants = [];
 
@@ -160,29 +165,36 @@ exports.jobActivate = asyncHandler(async (req, res, next) => {
             });
           }
 
-          const userDdata = {
-            user: {
-              name: user._id.name,
-              educations: educations,
-              experiences: experiences,
-            },
-            status: user.status,
-          };
-
-          applicants.unshift(userDdata);
+          if (user.status === "Accepted") {
+            const userDdata = {
+              user: {
+                _id: user._id._id,
+                name: user._id.name,
+                educations: educations,
+                experiences: experiences,
+              },
+              status: user.status,
+            };
+            applicants.unshift(userDdata);
+          }
         })
       : null;
 
     const data = {
       jobName: job.name,
-      category: "...",
+      session: `Session #${job.session}`,
+      category: job.categories.name,
+      minDegree: job.minDegree,
+      minSallary: job.minSallary,
+      maxSallary: job.maxSallary,
       totalApplicants: job.users ? job.users.length : 0,
-      acceptedApplicants: totalAccepted ? totalAccepted.length : 0,
-      rejectedApplicants: totalRejected ? totalRejected.length : 0,
+      acceptedApplicants: totalAccepted,
+      rejectedApplicants: totalRejected,
       applicants: applicants,
     };
 
     await Hires.create(data);
+    job.users = [];
   }
 
   job.save();
