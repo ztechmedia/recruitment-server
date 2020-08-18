@@ -100,6 +100,7 @@ const UserSchema = new mongoose.Schema(
       linkedin: String,
       instagram: String,
     },
+    resume: String,
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     createdAt: {

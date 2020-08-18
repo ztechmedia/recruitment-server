@@ -69,6 +69,7 @@ app.use(
   "/images/users",
   express.static(path.join(__dirname, "public/images/users"))
 );
+app.use("/files", express.static(path.join(__dirname, "public/files")));
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 //mount routes

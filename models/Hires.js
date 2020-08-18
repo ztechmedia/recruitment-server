@@ -41,6 +41,7 @@ const HiresSchema = new mongoose.Schema(
           },
           educations: [],
           experiences: [],
+          resume: String,
         },
         status: {
           type: String,

@@ -15,6 +15,7 @@ const {
   deleteExperiences,
   updateExperience,
   updateProfile,
+  addResume,
 } = require("../controllers/users");
 const User = require("../models/User");
 const advancedResults = require("../middleware/advanceResults");
@@ -50,5 +51,6 @@ router
   .put(updateExperience);
 
 router.post("/update-profile", updateProfile);
+router.route("/resume").post(addResume);
 
 module.exports = router;

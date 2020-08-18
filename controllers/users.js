@@ -4,7 +4,9 @@ const {
   sendTokenResponse,
   removeFields,
   updateToReqBody,
+  fileUpload,
 } = require("../utils/utility");
+const fs = require("fs");
 const User = require("../models/User");
 
 //@desc     get users
@@ -62,6 +64,11 @@ exports.deleteUsers = asyncHandler(async (req, res, next) => {
     _id: {
       $in: req.body._id,
     },
+  });
+
+  req.body._id.map((id) => {
+    const path = `./public/files/user_${id}.pdf`;
+    if (fs.existsSync(path)) fs.unlinkSync(path);
   });
 
   res.status(200).json({ success: true, data: req.body._id });
@@ -298,4 +305,22 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
   );
 
   res.status(200).json({ success: true, data: user });
+});
+
+//@desc     add resume
+//@route    POST /api/v1/users/resume
+//@access   private
+exports.addResume = asyncHandler(async (req, res, next) => {
+  const user = req.user;
+  const fileName = fileUpload(
+    user._id,
+    req.files.file,
+    process.env.FILE_UPLOAD_PATH,
+    next
+  );
+
+  user.resume = fileName;
+  user.save();
+
+  res.status(200).json({ success: true, data: fileName });
 });

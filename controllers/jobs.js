@@ -26,7 +26,7 @@ exports.getTotalJobs = asyncHandler(async (req, res, next) => {
 exports.getJob = asyncHandler(async (req, res, next) => {
   const job = await Jobs.findById(req.params.jobId).populate({
     path: "users._id",
-    select: "name address educations experiences social",
+    select: "name address educations experiences social resume",
   });
   if (!job) return next(new ErrorResponse("Job not found", 404));
 
@@ -100,7 +100,7 @@ exports.applyJob = asyncHandler(async (req, res, next) => {
 exports.jobStatus = asyncHandler(async (req, res, next) => {
   const job = await Jobs.findById(req.body.jobId).populate({
     path: "users._id",
-    select: "name address educations experiences social",
+    select: "name address educations experiences social resume",
   });
 
   if (!job) return new ErrorResponse("Job not found", 404);
@@ -124,7 +124,7 @@ exports.jobActivate = asyncHandler(async (req, res, next) => {
   const job = await Jobs.findById(req.body.jobId)
     .populate({
       path: "users._id",
-      select: "name educations experiences",
+      select: "name educations experiences resume",
     })
     .populate({ path: "categories", select: "name" });
 
@@ -172,6 +172,7 @@ exports.jobActivate = asyncHandler(async (req, res, next) => {
                 name: user._id.name,
                 educations: educations,
                 experiences: experiences,
+                resume: user._id.resume,
               },
               status: user.status,
             };
@@ -194,7 +195,7 @@ exports.jobActivate = asyncHandler(async (req, res, next) => {
     };
 
     await Hires.create(data);
-    job.users = [];
+    // job.users = [];
   }
 
   job.save();

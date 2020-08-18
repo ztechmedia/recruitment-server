@@ -16,19 +16,19 @@ exports.fileUpload = (id, file, pathUpload, next) => {
   const path = require("path");
 
   if (!file) {
-    return next(new ErrorResponse("Please upload an image file", 400));
+    return next(new ErrorResponse("Please upload a file", 400));
   }
 
   //make sure the file is images
-  if (!file.mimetype.startsWith("image")) {
-    return next(new ErrorResponse("Please upload an image file", 400));
+  if (!file.mimetype === "application/pdf") {
+    return next(new ErrorResponse("Please upload a pdf file", 400));
   }
 
   //check the file size
   if (file.size > process.env.MAX_FILE_UPLOAD) {
     return next(
       new ErrorResponse(
-        `Please upload an image size less than ${process.env.MAX_FILE_UPLOAD} (1MB)`,
+        `Please upload a file size less than ${process.env.MAX_FILE_UPLOAD} (1MB)`,
         400
       )
     );

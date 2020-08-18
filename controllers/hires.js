@@ -1,6 +1,7 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/asyncHandler");
 const sendMail = require("../utils/sendMail");
+const moment = require("moment");
 const Hires = require("../models/Hires");
 const User = require("../models/User");
 
@@ -34,7 +35,7 @@ exports.interviewInvitation = asyncHandler(async (req, res, next) => {
   const userId = hire.applicants[appIndex].user._id;
   const user = await User.findById(userId);
   if (!user) return next(new ErrorResponse("User not found", 404));
-  const date = req.body.date;
+  const date = moment(req.body.date).format("DD MMMM YYYY, hh:mm A");
 
   try {
     const message = `We are invite you to interview for position ${hire.jobName} at ${date}`;
@@ -44,7 +45,7 @@ exports.interviewInvitation = asyncHandler(async (req, res, next) => {
       message: message,
     });
 
-    hire.applicants[appIndex].status = `Invitation sent on ${req.body.date}`;
+    hire.applicants[appIndex].status = `Invitation sent at ${date}`;
     hire.save();
 
     res.status(200).json({
@@ -52,7 +53,6 @@ exports.interviewInvitation = asyncHandler(async (req, res, next) => {
       data: hire,
     });
   } catch (err) {
-    console.log(err);
     return next(new ErrorResponse("Email could not be sent", 500));
   }
 });
