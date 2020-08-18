@@ -23,7 +23,6 @@ exports.fileUpload = (id, file, pathUpload, next) => {
   if (!file.mimetype === "application/pdf") {
     return next(new ErrorResponse("Please upload a pdf file", 400));
   }
-
   //check the file size
   if (file.size > process.env.MAX_FILE_UPLOAD) {
     return next(

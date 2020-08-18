@@ -319,8 +319,10 @@ exports.addResume = asyncHandler(async (req, res, next) => {
     next
   );
 
-  user.resume = fileName;
-  user.save();
+  if (fileName) {
+    user.resume = fileName;
+    user.save();
 
-  res.status(200).json({ success: true, data: fileName });
+    res.status(200).json({ success: true, data: fileName });
+  }
 });
