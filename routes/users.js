@@ -16,6 +16,7 @@ const {
   updateExperience,
   updateProfile,
   addResume,
+  downloadResume,
 } = require("../controllers/users");
 const User = require("../models/User");
 const advancedResults = require("../middleware/advanceResults");
@@ -52,5 +53,6 @@ router
 
 router.post("/update-profile", updateProfile);
 router.route("/resume").post(addResume);
+router.route("/resume/:fileName").get(downloadResume);
 
 module.exports = router;

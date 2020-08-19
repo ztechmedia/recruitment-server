@@ -7,6 +7,7 @@ const {
   fileUpload,
 } = require("../utils/utility");
 const fs = require("fs");
+const path = require("path");
 const User = require("../models/User");
 
 //@desc     get users
@@ -324,5 +325,16 @@ exports.addResume = asyncHandler(async (req, res, next) => {
     user.save();
 
     res.status(200).json({ success: true, data: fileName });
+  }
+});
+
+//@desc     download resume
+//@route    GET /api/v1/users/resume/fileName
+//@access   private
+exports.downloadResume = asyncHandler(async (req, res, next) => {
+  const fileName = req.params.fileName;
+  const fileLocation = path.join("./public/files", fileName);
+  if (fs.existsSync(fileLocation)) {
+    res.download(fileLocation, fileName);
   }
 });
